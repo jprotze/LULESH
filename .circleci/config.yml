@@ -6,7 +6,7 @@ jobs:
     steps:
       - checkout
       - run: mkdir build-noopenmp && cd build-noopenmp && cmake -DCMAKE_BUILD_TYPE=Release -DWITH_OPENMP=Off .. && make
-      - run: mustrun -np 8 build-noopenmp/lulesh2.0 -s 16
+      - run: env MUST_FILTER_FILE=$PWD/.circleci/filterfile.txt mustrun -np 8 build-noopenmp/lulesh2.0 -s 16
       - store_artifacts: 
           path: MUST_Output.html
       - store_artifacts: 
