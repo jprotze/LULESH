@@ -2,7 +2,7 @@ version: 2
 jobs:
   build-noopenmp:
     docker:
-      - image: jprotze/must:1.7.1
+      - image: jprotze/must:1.8.0-rc1
     steps:
       - checkout
       - run: mkdir build-noopenmp && cd build-noopenmp && cmake -DCMAKE_BUILD_TYPE=Release -DWITH_OPENMP=Off .. && make
