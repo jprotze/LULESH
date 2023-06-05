@@ -2239,7 +2239,7 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
       /* compress data, minimal set */
 #pragma omp parallel
       {
-#pragma omp for nowait firstprivate(numElemReg)
+#pragma omp for nowait firstprivate(numElemReg) schedule(dynamic)
          for (Index_t i=0; i<numElemReg; ++i) {
             Index_t ielem = regElemList[i];
             e_old[i] = domain.e(ielem) ;
@@ -2250,7 +2250,7 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
             ql_old[i] = domain.ql(ielem) ;
          }
 
-#pragma omp for firstprivate(numElemReg)
+#pragma omp for firstprivate(numElemReg) schedule(dynamic)
          for (Index_t i = 0; i < numElemReg ; ++i) {
             Index_t ielem = regElemList[i];
             Real_t vchalf ;
@@ -2261,7 +2261,7 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
 
       /* Check for v > eosvmax or v < eosvmin */
          if ( eosvmin != Real_t(0.) ) {
-#pragma omp for nowait firstprivate(numElemReg, eosvmin)
+#pragma omp for nowait firstprivate(numElemReg, eosvmin) schedule(dynamic)
             for(Index_t i=0 ; i<numElemReg ; ++i) {
                Index_t ielem = regElemList[i];
                if (vnewc[ielem] <= eosvmin) { /* impossible due to calling func? */
@@ -2270,7 +2270,7 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
             }
          }
          if ( eosvmax != Real_t(0.) ) {
-#pragma omp for nowait firstprivate(numElemReg, eosvmax)
+#pragma omp for nowait firstprivate(numElemReg, eosvmax) schedule(dynamic)
             for(Index_t i=0 ; i<numElemReg ; ++i) {
                Index_t ielem = regElemList[i];
                if (vnewc[ielem] >= eosvmax) { /* impossible due to calling func? */
@@ -2281,7 +2281,7 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
             }
          }
 
-#pragma omp for nowait firstprivate(numElemReg)
+#pragma omp for nowait firstprivate(numElemReg) schedule(dynamic)
          for (Index_t i = 0 ; i < numElemReg ; ++i) {
             work[i] = Real_t(0.) ; 
          }
@@ -2294,7 +2294,7 @@ void EvalEOSForElems(Domain& domain, Real_t *vnewc,
                          numElemReg, regElemList);
    }
 
-#pragma omp parallel for firstprivate(numElemReg)
+#pragma omp parallel for firstprivate(numElemReg) schedule(dynamic)
    for (Index_t i=0; i<numElemReg; ++i) {
       Index_t ielem = regElemList[i];
       domain.p(ielem) = p_new[i] ;
@@ -2345,7 +2345,7 @@ void ApplyMaterialPropertiesForElems(Domain& domain)
 
        // Bound the updated relative volumes with eosvmin/max
        if (eosvmin != Real_t(0.)) {
-#pragma omp for nowait firstprivate(numElem)
+#pragma omp for nowait firstprivate(numElem) schedule(dynamic)
           for(Index_t i=0 ; i<numElem ; ++i) {
              if (vnewc[i] < eosvmin)
                 vnewc[i] = eosvmin ;
@@ -2353,7 +2353,7 @@ void ApplyMaterialPropertiesForElems(Domain& domain)
        }
 
        if (eosvmax != Real_t(0.)) {
-#pragma omp for nowait firstprivate(numElem)
+#pragma omp for nowait firstprivate(numElem) schedule(dynamic)
           for(Index_t i=0 ; i<numElem ; ++i) {
              if (vnewc[i] > eosvmax)
                 vnewc[i] = eosvmax ;
@@ -2363,7 +2363,7 @@ void ApplyMaterialPropertiesForElems(Domain& domain)
        // This check may not make perfect sense in LULESH, but
        // it's representative of something in the full code -
        // just leave it in, please
-#pragma omp for nowait firstprivate(numElem)
+#pragma omp for nowait firstprivate(numElem) schedule(dynamic)
        for (Index_t i=0; i<numElem; ++i) {
           Real_t vc = domain.v(i) ;
           if (eosvmin != Real_t(0.)) {

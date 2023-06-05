@@ -5,6 +5,7 @@ project(LULESH CXX)
 option(WITH_MPI    "Build LULESH with MPI"          TRUE)
 option(WITH_OPENMP "Build LULESH with OpenMP"       TRUE)
 option(WITH_SILO   "Build LULESH with silo support" FALSE)
+option(WITH_DOUBLE "Build LULESH with double float" TRUE)
 
 if (WITH_MPI)
   find_package(MPI REQUIRED)
@@ -14,6 +15,11 @@ if (WITH_MPI)
 else()
   add_definitions("-DUSE_MPI=0")
 endif()
+
+if (WITH_DOUBLE)
+  add_definitions("-DUSE_DOUBLE=1")
+endif()
+
 
 if (WITH_OPENMP)
   find_package(OpenMP REQUIRED)

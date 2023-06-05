@@ -8,9 +8,9 @@ LULESH_EXEC = lulesh2.0
 MPI_INC = /opt/local/include/openmpi
 MPI_LIB = /opt/local/lib
 
-SERCXX = g++ -DUSE_MPI=0
-MPICXX = mpig++ -DUSE_MPI=1
-CXX = $(MPICXX)
+SERCXX = clang++
+MPICXX ?= mpic++
+CXX ?= $(SERCXX)
 
 SOURCES2.0 = \
 	lulesh.cc \
@@ -19,10 +19,16 @@ SOURCES2.0 = \
 	lulesh-util.cc \
 	lulesh-init.cc
 OBJECTS2.0 = $(SOURCES2.0:.cc=.o)
+OBJECTS2.0-tsan = $(SOURCES2.0:.cc=.tsan.o)
+OBJECTS2.0-mpi = $(SOURCES2.0:.cc=.mpi.o)
 
 #Default build suggestions with OpenMP for g++
 CXXFLAGS = -g -O3 -fopenmp -I. -Wall
 LDFLAGS = -g -O3 -fopenmp
+
+ifndef WITH_FLOAT
+CXXFLAGS += -DUSE_DOUBLE=1
+endif
 
 #Below are reasonable default flags for a serial build
 #CXXFLAGS = -g -O3 -I. -Wall
@@ -42,15 +48,31 @@ LDFLAGS = -g -O3 -fopenmp
 #CXXFLAGS = -g -DVIZ_MESH -I${SILO_INCDIR} -Wall -Wno-pragmas
 #LDFLAGS = -g -L${SILO_LIBDIR} -Wl,-rpath -Wl,${SILO_LIBDIR} -lsiloh5 -lhdf5
 
-.cc.o: lulesh.h
+%.o: %.cc lulesh.h
 	@echo "Building $<"
-	$(CXX) -c $(CXXFLAGS) -o $@  $<
+	$(CXX) -c $(CXXFLAGS) -DUSE_MPI=0 -o $@  $<
 
-all: $(LULESH_EXEC)
+%.tsan.o: %.cc lulesh.h
+	@echo "Building $<"
+	$(CXX) -c $(CXXFLAGS) -fsanitize=thread -DUSE_MPI=0 -o $@  $<
+
+%.mpi.o: %.cc lulesh.h
+	@echo "Building $<"
+	$(MPICXX) -c $(CXXFLAGS) -DUSE_MPI=1 -o $@  $<
+
+all: $(LULESH_EXEC) $(LULESH_EXEC)-mpi $(LULESH_EXEC)-tsan
 
 $(LULESH_EXEC): $(OBJECTS2.0)
 	@echo "Linking"
 	$(CXX) $(OBJECTS2.0) $(LDFLAGS) -lm -o $@
+
+$(LULESH_EXEC)-mpi: $(OBJECTS2.0-mpi)
+	@echo "Linking"
+	$(MPICXX) $(OBJECTS2.0-mpi) $(LDFLAGS) -lm -o $@
+
+$(LULESH_EXEC)-tsan: $(OBJECTS2.0-tsan)
+	@echo "Linking"
+	$(CXX) $(OBJECTS2.0-tsan) $(LDFLAGS) -fsanitize=thread -lm -o $@
 
 clean:
 	/bin/rm -f *.o *~ $(OBJECTS) $(LULESH_EXEC)
